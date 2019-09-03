@@ -35,11 +35,14 @@ async function interval(
                     monthYear: monthYear
                 },
                 {
+                    type: 'process'
+                },
+                {
                     createAt: {
                         $gte: fechaInicio,
                         $lt: fechaFin
                     }
-                }
+                },
             ]
         })
         .limit(INTERVAL)
@@ -76,8 +79,7 @@ async function cargarDataLogs(dbo, fecha, month) {
         `${fecha.a}-${fecha.m}-${fecha.d}T23:59:59.999Z`
     ).getTime();
 
-    //  console.log(new Date(fechaInicio), new Date(fechaFin))
-    let contador = 0;
+
     let result = { body: null, EOF: false, fechaUltimo: fechaInicio };
     const collection = dbo.collection("logs_new");
     const INTERVAL = 1000;
@@ -212,24 +214,13 @@ async function loadDataMessages(day, month) {
 
         messagesOut.messages.map((message, i) => {
             bar1.update(i)
-
-            let messageText = "";
-
-            if (message.type == 'process') {
-
-                messageText = message.text
-
-                if (facetas.includes(messageText)) {
-                    filters[messageText] = filters[messageText] + 1
-                    filters['Total'] = filters['Total'] + 1
-
-                }
+            messageText=message.text
+            if (facetas.includes(messageText)) {
+                filters[messageText] = filters[messageText] + 1
+                filters['Total'] = filters['Total'] + 1
 
             }
-
-
         })
-
 
         bar1.stop()
 
@@ -242,7 +233,7 @@ async function loadDataMessages(day, month) {
     });
 }
 
-async function analisisRebote( month, diasMes) {
+async function analisisData( month, diasMes) {
 
     for (let j = 1; j <= diasMes; j++) {
         await loadDataMessages( j, month)
@@ -252,6 +243,8 @@ async function analisisRebote( month, diasMes) {
 
 async function cargarData(month) {
     const dbo = await connection();
+    createDir('./result_data');
+    createDir('./data_out');
 
     console.log(`cargando data mes: ${MONTHS[month - 1]}`);
     let diasMes = new Date(2019, month, 0).getDate();
@@ -259,12 +252,12 @@ async function cargarData(month) {
         await principal(dbo, i, month);
     }
 
-    await analisisRebote( month, diasMes);
+    await analisisData( month, diasMes);
 }
 
 /**
  * CAMBIAR EL VALOR DEL MES Y CARGARA LA DATA DE ESE MES
  */
-const MONTH = 7
+const MONTH = 9
 
 cargarData(MONTH);
